@@ -10,7 +10,7 @@ Data::Xslate - Templatize your data.
     
     my $xslate = Data::Xslate->new();
     
-    my $new_data = $xslate->render(
+    my $data = $xslate->render(
         {
             user => {
                 login => 'john',
@@ -21,8 +21,16 @@ Data::Xslate - Templatize your data.
                 to      => '=:user.email',
                 subject => 'Hello <: $user.name :>!',
             },
+            'email.from' => 'george@example.com',
         },
     );
+    
+    # This would produce the following:
+    # $data->{email} = {
+    #     to => 'john@example.com',
+    #     from => 'george@example.com',
+    #     subject => 'Hello John!',
+    # }
 
 =head1 DESCRIPTION
 
