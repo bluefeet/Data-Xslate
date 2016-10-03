@@ -1,107 +1,5 @@
 package Data::Xslate;
 
-=head1 NAME
-
-Data::Xslate - Templatize your data.
-
-=head1 SYNOPSIS
-
-    use Data::Xslate;
-    
-    my $xslate = Data::Xslate->new();
-    
-    my $new_data = $xslate->render(
-        {
-            user => {
-                login => 'john',
-                email => '<: $login :>@example.com',
-                name  => 'John',
-            },
-            email => {
-                to      => '=:user.email',
-                subject => 'Hello <: $user.name :>!',
-            },
-        },
-    );
-
-=head1 DESCRIPTION
-
-This module provides a syntax for templatizing data structures.
-
-The most likely use-case is adding some flexibility to configuration
-files.
-
-=head1 SUBSTITUTION
-
-    {
-        foo => 14,
-        bar => '=:foo',
-    }
-    # { foo=>14, bar=>14 }
-
-This injects the target value.  This can be used for any data type.  For
-example we can substitute an array:
-
-    {
-        foo => [1,2,3],
-        bar => '=:foo',
-    }
-    # { foo=>[1,2,3], bar=>[1,2,3] }
-
-=head1 TEMPLATING
-
-    {
-        foo => 'green',
-        bar => 'It is <: $foo :>!',
-    }
-    # { foo=>'green', bar=>'It is green!' }
-
-The syntax for templating is provided by L<Text::Xslate>, so
-there is a lot of power here including being able to do math
-and string mangling.
-
-=head1 SCOPE
-
-When using either L</SUBSTITUTION> or L</TEMPLATING> you specify a key to be
-included.  This key is found using scope-aware rules where the key is searched for
-in a similar fashion to how you'd expect when dealing with lexical variables in
-programming.
-
-For example, you can refer to a key in the same scope:
-
-    { a=>1, b=>'=:a' }
-
-You may refer to a key in a lower scope:
-
-    { a=>{ b=>1 }, c=>'=:a.b' }
-
-You may refer to a key in a higher scope:
-
-    { a=>{ b=>'=:c' }, c=>1 }
-
-You may refer to a key in a higher scope that is nested:
-
-    { a=>{ b=>'=:c.d' }, c=>{ d=>1 } }
-
-The logic behind this is pretty flexible, so more complex use cases will
-just work like you would expect.
-
-If you'd rather avoid this scoping you can prepend any key with a dot, C<.>, and
-it will be looked for at the root hash of the config tree only.
-
-=head1 NESTED KEYS
-
-When setting a key value the key can point deeper into the structure by separating keys with
-a dot, C<.>.  Consider this:
-
-    { a=>{ b=>1 }, 'a.b'=>2 }
-
-Which produces:
-
-    { a=>{ b=>2 } }
-
-=cut
-
 use Text::Xslate;
 use Types::Standard -types;
 use Types::Common::String -types;
@@ -162,46 +60,17 @@ has _xslate_args => (
     is => 'ro',
 );
 
-=head1 ARGUMENTS
-
-Any arguments you pass to C<new>, which this class does not directly
-handle, will be used when creating the L</xslate> object.  So, any
-arguments which L<Text::Xslate> supports may be set.  For example:
-
-    my $xslate = Data::Xslate->new(
-        substitution_tag => ']]', # A Data::Xslate argument.
-        verbose          => 2,    # A Text::Xslate option.
-    );
-
-=head2 substitution_tag
-
-The string to look for at the beginning of any string value which
-signifies L</SUBSTITUTION>.  Defaults to C<=:>.
-
-=cut
-
 has substitution_tag => (
     is      => 'ro',
     isa     => NonEmptySimpleStr,
     default => '=:',
 );
 
-=head1 ATTRIBUTES
-
-=head2 xslate
-
-The L<Text::Xslate> object used for processing template string values.
-
-By default this will set the C<type> to C<text> and will add a C<node>
-function to the C<function> (function map) option.
-
-=cut
-
-has xslate => (
+has _xslate => (
     is       => 'lazy',
     init_arg => undef,
 );
-sub _build_xslate {
+sub _build__xslate {
     my ($self) = @_;
 
     my $args = { %{ $self->_xslate_args() } };
@@ -215,38 +84,16 @@ sub _build_xslate {
     );
 }
 
-=head2 vars
-
-This is a tied hash used as the C<vars> argument to L<Text::Xslate>
-allowing self-referencial lookups in templating and substitutions.
-
-=cut
-
-has vars => (
-    is       => 'lazy',
-    init_arg => undef,
-);
-sub _build_vars {
-    my %vars;
-    tie %vars, 'Data::Xslate::Vars', \&_find_node_for_xslate;
-    return \%vars;
-}
-
-=head1 METHODS
-
-=head2 render
-
-    my $data_out = $xslate->render( $data_in );
-
-=cut
-
 sub render {
     my ($self, $data) = @_;
 
     local $Carp::Internal{ (__PACKAGE__) } = 1;
 
-    local $XSLATE = $self->xslate();
-    local $VARS = $self->vars();
+    local $XSLATE = $self->_xslate();
+
+    my %vars;
+    tie %vars, 'Data::Xslate::Vars', \&_find_node_for_xslate;
+    local $VARS = \%vars;
 
     local $ROOT = $data;
     local $NODES = {};
@@ -394,6 +241,128 @@ sub _set_node {
 
 1;
 __END__
+
+=head1 NAME
+
+Data::Xslate - Templatize your data.
+
+=head1 SYNOPSIS
+
+    use Data::Xslate;
+    
+    my $xslate = Data::Xslate->new();
+    
+    my $new_data = $xslate->render(
+        {
+            user => {
+                login => 'john',
+                email => '<: $login :>@example.com',
+                name  => 'John',
+            },
+            email => {
+                to      => '=:user.email',
+                subject => 'Hello <: $user.name :>!',
+            },
+        },
+    );
+
+=head1 DESCRIPTION
+
+This module provides a syntax for templatizing data structures.
+
+The most likely use-case is adding some flexibility to configuration
+files.
+
+=head1 SUBSTITUTION
+
+    {
+        foo => 14,
+        bar => '=:foo',
+    }
+    # { foo=>14, bar=>14 }
+
+This injects the target value.  This can be used for any data type.  For
+example we can substitute an array:
+
+    {
+        foo => [1,2,3],
+        bar => '=:foo',
+    }
+    # { foo=>[1,2,3], bar=>[1,2,3] }
+
+=head1 TEMPLATING
+
+    {
+        foo => 'green',
+        bar => 'It is <: $foo :>!',
+    }
+    # { foo=>'green', bar=>'It is green!' }
+
+The syntax for templating is provided by L<Text::Xslate>, so
+there is a lot of power here including being able to do math
+and string mangling.
+
+=head1 SCOPE
+
+When using either L</SUBSTITUTION> or L</TEMPLATING> you specify a key to be
+included.  This key is found using scope-aware rules where the key is searched for
+in a similar fashion to how you'd expect when dealing with lexical variables in
+programming.
+
+For example, you can refer to a key in the same scope:
+
+    { a=>1, b=>'=:a' }
+
+You may refer to a key in a lower scope:
+
+    { a=>{ b=>1 }, c=>'=:a.b' }
+
+You may refer to a key in a higher scope:
+
+    { a=>{ b=>'=:c' }, c=>1 }
+
+You may refer to a key in a higher scope that is nested:
+
+    { a=>{ b=>'=:c.d' }, c=>{ d=>1 } }
+
+The logic behind this is pretty flexible, so more complex use cases will
+just work like you would expect.
+
+If you'd rather avoid this scoping you can prepend any key with a dot, C<.>, and
+it will be looked for at the root hash of the config tree only.
+
+=head1 NESTED KEYS
+
+When setting a key value the key can point deeper into the structure by separating keys with
+a dot, C<.>.  Consider this:
+
+    { a=>{ b=>1 }, 'a.b'=>2 }
+
+Which produces:
+
+    { a=>{ b=>2 } }
+
+=head1 ARGUMENTS
+
+Any arguments you pass to C<new>, which this class does not directly
+handle, will be used when creating the L</xslate> object.  So, any
+arguments which L<Text::Xslate> supports may be set.  For example:
+
+    my $xslate = Data::Xslate->new(
+        substitution_tag => ']]', # A Data::Xslate argument.
+        verbose          => 2,    # A Text::Xslate option.
+    );
+
+=head2 substitution_tag
+
+The string to look for at the beginning of any string value which
+signifies L</SUBSTITUTION>.  Defaults to C<=:>.
+
+=head1 METHODS
+
+=head2 render
+
+    my $data_out = $xslate->render( $data_in );
 
 =head1 AUTHOR
 

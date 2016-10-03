@@ -116,20 +116,6 @@ arguments which L<Text::Xslate> supports may be set.  For example:
 The string to look for at the beginning of any string value which
 signifies L</SUBSTITUTION>.  Defaults to C<=:>.
 
-=head1 ATTRIBUTES
-
-=head2 xslate
-
-The L<Text::Xslate> object used for processing template string values.
-
-By default this will set the C<type> to C<text> and will add a C<node>
-function to the C<function> (function map) option.
-
-=head2 vars
-
-This is a tied hash used as the C<vars> argument to L<Text::Xslate>
-allowing self-referencial lookups in templating and substitutions.
-
 =head1 METHODS
 
 =head2 render
