@@ -40,7 +40,7 @@ files.
     # { foo=>14, bar=>14 }
 
 This injects the target value.  This can be used for any data type.  For
-examples:
+example we can substitute an array:
 
     {
         foo => [1,2,3],
@@ -135,5 +135,21 @@ allowing self-referencial lookups in templating and substitutions.
 =head2 render
 
     my $data_out = $xslate->render( $data_in );
+
+=head1 AUTHOR
+
+Aran Clary Deltac <bluefeetE<64>gmail.com>
+
+=head1 ACKNOWLEDGEMENTS
+
+Thanks to L<ZipRecruiter|https://www.ziprecruiter.com/>
+for encouraging their employees to contribute back to the open
+source ecosystem.  Without their dedication to quality software
+development this distribution would not exist.
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut

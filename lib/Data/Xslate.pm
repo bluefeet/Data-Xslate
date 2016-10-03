@@ -40,7 +40,7 @@ files.
     # { foo=>14, bar=>14 }
 
 This injects the target value.  This can be used for any data type.  For
-examples:
+example we can substitute an array:
 
     {
         foo => [1,2,3],
