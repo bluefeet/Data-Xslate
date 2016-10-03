@@ -1,3 +1,4 @@
+requires 'Text::Xslate' => 3;
 requires 'Moo' => 1.006000;
 requires 'Type::Tiny' => 1;
 requires 'strictures' => 2;
