@@ -12,7 +12,8 @@ use namespace::clean;
 # A tied-hash class used to expose the data as the Xslate
 # vars when processing the data.
 {
-    package Data::Xslate::Vars;
+    package # NO INDEX CPAN!
+        Data::Xslate::Vars;
 
     use base 'Tie::Hash';
 
