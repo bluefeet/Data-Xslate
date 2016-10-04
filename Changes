@@ -2,6 +2,8 @@ Revision history for Perl extension Data::Xslate.
 
 {{$NEXT}}
 
+0.02 2016-10-04
+
  - Fixed a bunch of nasty little bugs found by creating a new test
    which checks permutations of nested_key_tag, substitution_tag,
    and key_separator.
