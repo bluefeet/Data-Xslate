@@ -2,8 +2,11 @@ Revision history for Perl extension Data::Xslate.
 
 {{$NEXT}}
 
- - Add a key_separator argument so the syntax of referring to
-   keys in a different scope can be customized a bit.
+ - Changed the default nested_key_tag and substitution_tag to
+   a plane old equals sign.  This may not work great in all situations,
+   but its simple and easy to change.
+ - Add a key_separator argument so the character used between
+   keys in a key path can be customized.
  - Make the nested keys syntax more explicit by supporting a
    nested_key_tag argument.
  - Stop CPAN from indexing an internal package.

@@ -18,10 +18,10 @@ Data::Xslate - Templatize your data.
                 name  => 'John',
             },
             email => {
-                to      => '=:user.email',
+                to      => '=user.email',
                 subject => 'Hello <: $user.name :>!',
             },
-            'email.from:=' => 'george@example.com',
+            'email.from=' => 'george@example.com',
         },
     );
     
@@ -127,33 +127,33 @@ So, any arguments which L<Text::Xslate> supports may be set.  For example:
 =head2 substitution_tag
 
 The string to look for at the beginning of any string value which
-signifies L</SUBSTITUTION>.  Defaults to C<=:>.  This is used in
+signifies L</SUBSTITUTION>.  Defaults to C<=>.  This is used in
 data like this:
 
-    { a=>{ b=>2 }, c => '=:a.b' }
+    { a=>{ b=>2 }, c => '=a.b' }
 
 =cut
 
 has substitution_tag => (
     is      => 'ro',
     isa     => NonEmptySimpleStr,
-    default => '=:',
+    default => '=',
 );
 
 =head2 nested_key_tag
 
 The string to look for at the end of any key which signifies
-L</NESTED KEYS>.  Defaults to C<:=>.  This is used in data
+L</NESTED KEYS>.  Defaults to C<=>.  This is used in data
 like this:
 
-    { a=>{ b=>2 }, 'a.c:=' => 3 }
+    { a=>{ b=>2 }, 'a.c=' => 3 }
 
 =cut
 
 has nested_key_tag => (
     is      => 'ro',
     isa     => NonEmptySimpleStr,
-    default => ':=',
+    default => '=',
 );
 
 =head2 key_separator
@@ -161,17 +161,17 @@ has nested_key_tag => (
 The string which will be used between keys.  The default is a dot (C<.>)
 which looks like this:
 
-    { a=>{ b=>2 }, c => '=:a.b' }
+    { a=>{ b=>2 }, c => '=a.b' }
 
 Whereas, for example, if you changed the C<key_separator> to a forward
 slash it would look like this:
 
-    { a=>{ b=>2 }, c => '=:a/b' }
+    { a=>{ b=>2 }, c => '=a/b' }
 
 Which actually looks pretty good when you do an absolute, rather than
 relative, key:
 
-    { a=>{ b=>2 }, c => '=:/a/b' }
+    { a=>{ b=>2 }, c => '=/a/b' }
 
 =cut
 
@@ -406,11 +406,11 @@ the L</SCOPE> rules.
 
 Substituion allows you to retrieve a value from one key and use it
 as the value for the current key.  To do this your hash or array
-value must start with the L</substitution_tag> (defaults to C<=:>):
+value must start with the L</substitution_tag> (defaults to C<=>):
 
     {
         foo => 14,
-        bar => '=:foo',
+        bar => '=foo',
     }
     # { foo=>14, bar=>14 }
 
@@ -426,7 +426,7 @@ when you want to substitute an array or hash:
 
     {
         foo => [1,2,3],
-        bar => '=:foo',
+        bar => '=foo',
     }
     # { foo=>[1,2,3], bar=>[1,2,3] }
 
@@ -436,10 +436,10 @@ The keys in substitution follow the L</SCOPE> rules.
 
 When setting a key value the key can point deeper into the structure by
 separating keys with the L</key_separator> (defaults to a dot, C<.>),
-and ending the key with the L</nested_key_tag> (defaults to C<:=>).
+and ending the key with the L</nested_key_tag> (defaults to C<=>).
 Consider this:
 
-    { a=>{ b=>1 }, 'a.b:=' => 2 }
+    { a=>{ b=>1 }, 'a.b=' => 2 }
 
 Which produces:
 
@@ -477,19 +477,19 @@ programming.
 
 For example, you can refer to a key in the same scope:
 
-    { a=>1, b=>'=:a' }
+    { a=>1, b=>'=a' }
 
 You may refer to a key in a lower scope:
 
-    { a=>{ b=>1 }, c=>'=:a.b' }
+    { a=>{ b=>1 }, c=>'=a.b' }
 
 You may refer to a key in a higher scope:
 
-    { a=>{ b=>'=:c' }, c=>1 }
+    { a=>{ b=>'=c' }, c=>1 }
 
 You may refer to a key in a higher scope that is nested:
 
-    { a=>{ b=>'=:c.d' }, c=>{ d=>1 } }
+    { a=>{ b=>'=c.d' }, c=>{ d=>1 } }
 
 The logic behind this is pretty flexible, so more complex use cases will
 just work like you would expect.
@@ -502,12 +502,12 @@ In the case of templating a special C<node> function is provided which
 will allow you to retrieve an absolute key.  For example these two lines
 would do the same thing (printing out a relative key value):
 
-    '<: $foo.bar :>',
-    '<: node("foo.bar") :>',
+    <: $foo.bar :>
+    <: node("foo.bar") :>
 
-But if you wanted to refer to a absolute key you'd have to do this:
+But if you wanted to refer to an absolute key you'd have to do this:
 
-    '<: node(".foo.bar") :>',
+    <: node(".foo.bar") :>
 
 =head1 AUTHOR
 
