@@ -450,6 +450,24 @@ feature is very handy when you are merging data structures from different
 sources and one data structure will override a subset of values in the
 other.
 
+=head1 KEY PATHS
+
+When referring to other values in L</TEMPLATING>, L</SUBSTITUTION>, or
+L</NESTED KEYS> you are specifying a path made up of keys for this module
+to walk and find a value to retrieve.
+
+So, when you specify a key path such as C<foo.bar> you are looking for a hash
+with the key C<foo> who's value is a hash and then retrieving the value
+of the C<bar> key in it.
+
+Arrays are fully supported in these key paths so that if you specify
+a key path such as C<bar.0> you are looking for a hash with the C<bar>
+key whose value is an array, and then the first value in the array is
+fetched.
+
+Note that the above example assume that L</key_separator> is a dot (C<.>),
+the default.
+
 =head1 SCOPE
 
 When using either L</SUBSTITUTION> or L</TEMPLATING> you specify a key to be
@@ -479,6 +497,17 @@ just work like you would expect.
 If you'd rather avoid this scoping you can prepend any key with the L</key_separator>
 (defaults to a dot, C<.>), and it will be looked for at the root of the config data
 only.
+
+In the case of templating a special C<node> function is provided which
+will allow you to retrieve an absolute key.  For example these two lines
+would do the same thing (printing out a relative key value):
+
+    '<: $foo.bar :>',
+    '<: node("foo.bar") :>',
+
+But if you wanted to refer to a absolute key you'd have to do this:
+
+    '<: node(".foo.bar") :>',
 
 =head1 AUTHOR
 
