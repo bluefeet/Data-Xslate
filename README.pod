@@ -21,7 +21,7 @@ Data::Xslate - Templatize your data.
                 to      => '=:user.email',
                 subject => 'Hello <: $user.name :>!',
             },
-            'email.from' => 'george@example.com',
+            'email.from:=' => 'george@example.com',
         },
     );
     
@@ -100,9 +100,9 @@ it will be looked for at the root hash of the config tree only.
 =head1 NESTED KEYS
 
 When setting a key value the key can point deeper into the structure by separating keys with
-a dot, C<.>.  Consider this:
+a dot, C<.>, and ending the key with C<:=>.  Consider this:
 
-    { a=>{ b=>1 }, 'a.b'=>2 }
+    { a=>{ b=>1 }, 'a.b:=' => 2 }
 
 Which produces:
 
@@ -123,6 +123,11 @@ arguments which L<Text::Xslate> supports may be set.  For example:
 
 The string to look for at the beginning of any string value which
 signifies L</SUBSTITUTION>.  Defaults to C<=:>.
+
+=head2 nested_key_tag
+
+The string to look for at the end of any key which signifies
+L</NESTED KEYS>.  Defaults to C<:=>.
 
 =head1 METHODS
 

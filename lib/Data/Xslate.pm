@@ -29,15 +29,6 @@ use namespace::clean;
     }
 }
 
-# State variables, only used during local() calls to maintane
-# state in recursive function calls.
-our $XSLATE;
-our $VARS;
-our $ROOT;
-our $NODES;
-our $SUBSTITUTION_TAG;
-our $PATH_FOR_XSLATE;
-
 around BUILDARGS => sub{
     my $orig = shift;
     my $class = shift;
@@ -47,6 +38,7 @@ around BUILDARGS => sub{
 
     my @expected_args = qw(
         substitution_tag
+        nested_key_tag
     );
     foreach my $arg (@expected_args) {
         next if !exists $xslate_args->{$arg};
@@ -67,6 +59,12 @@ has substitution_tag => (
     default => '=:',
 );
 
+has nested_key_tag => (
+    is      => 'ro',
+    isa     => NonEmptySimpleStr,
+    default => ':=',
+);
+
 has _xslate => (
     is       => 'lazy',
     init_arg => undef,
@@ -85,6 +83,16 @@ sub _build__xslate {
     );
 }
 
+# State variables, only used during local() calls to maintane
+# state in recursive function calls.
+our $XSLATE;
+our $VARS;
+our $ROOT;
+our $NODES;
+our $SUBSTITUTION_TAG;
+our $NESTED_KEY_TAG;
+our $PATH_FOR_XSLATE;
+
 sub render {
     my ($self, $data) = @_;
 
@@ -99,6 +107,7 @@ sub render {
     local $ROOT = $data;
     local $NODES = {};
     local $SUBSTITUTION_TAG = $self->substitution_tag();
+    local $NESTED_KEY_TAG = $self->nested_key_tag();
 
     return _evaluate_node( 'root' => $data );
 }
@@ -123,12 +132,13 @@ sub _evaluate_node {
     elsif (ref($node) eq 'HASH') {
         $NODES->{$path} = $node;
         foreach my $key (sort keys %$node) {
-            my $sub_path = "$path.$key";
-            if ($key =~ m{\.}) {
+            if ($key =~ m{^(.*)$NESTED_KEY_TAG$}) {
+                my $sub_path = "$path.$1";
                 my $value = delete $node->{$key};
                 _set_node( $sub_path, $value );
             }
             else {
+                my $sub_path = "$path.$key";
                 $node->{$key} = _evaluate_node( $sub_path, $node->{$key} );
             }
         }
@@ -264,7 +274,7 @@ Data::Xslate - Templatize your data.
                 to      => '=:user.email',
                 subject => 'Hello <: $user.name :>!',
             },
-            'email.from' => 'george@example.com',
+            'email.from:=' => 'george@example.com',
         },
     );
     
@@ -343,9 +353,9 @@ it will be looked for at the root hash of the config tree only.
 =head1 NESTED KEYS
 
 When setting a key value the key can point deeper into the structure by separating keys with
-a dot, C<.>.  Consider this:
+a dot, C<.>, and ending the key with C<:=>.  Consider this:
 
-    { a=>{ b=>1 }, 'a.b'=>2 }
+    { a=>{ b=>1 }, 'a.b:=' => 2 }
 
 Which produces:
 
@@ -366,6 +376,11 @@ arguments which L<Text::Xslate> supports may be set.  For example:
 
 The string to look for at the beginning of any string value which
 signifies L</SUBSTITUTION>.  Defaults to C<=:>.
+
+=head2 nested_key_tag
+
+The string to look for at the end of any key which signifies
+L</NESTED KEYS>.  Defaults to C<:=>.
 
 =head1 METHODS
 

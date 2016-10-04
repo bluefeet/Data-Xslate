@@ -2,6 +2,7 @@ Revision history for Perl extension Data::Xslate.
 
 {{$NEXT}}
 
+ - Make the nested keys syntax more explicit.
  - Stop CPAN from indexing an internal package.
  - Add Text::Xslate to dependencies.
 

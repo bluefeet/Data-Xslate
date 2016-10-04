@@ -33,7 +33,7 @@ my @tests = (
         'absolute versus relative substitution',
     ],
     [
-        { a=>{b=>1,c=>2}, 'a.b'=>'=:c' },
+        { a=>{b=>1,c=>2}, 'a.b:='=>'=:c' },
         { a=>{b=>2,c=>2} },
         'foo',
     ],
