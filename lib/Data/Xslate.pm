@@ -1,5 +1,46 @@
 package Data::Xslate;
 
+=head1 NAME
+
+Data::Xslate - Templatize your data.
+
+=head1 SYNOPSIS
+
+    use Data::Xslate;
+    
+    my $xslate = Data::Xslate->new();
+    
+    my $data = $xslate->render(
+        {
+            user => {
+                login => 'john',
+                email => '<: $login :>@example.com',
+                name  => 'John',
+            },
+            email => {
+                to      => '=:user.email',
+                subject => 'Hello <: $user.name :>!',
+            },
+            'email.from:=' => 'george@example.com',
+        },
+    );
+    
+    # This would produce the following:
+    # $data->{email} = {
+    #     to => 'john@example.com',
+    #     from => 'george@example.com',
+    #     subject => 'Hello John!',
+    # }
+
+=head1 DESCRIPTION
+
+This module provides a syntax for templatizing data structures.
+
+The most likely use-case is adding some flexibility to configuration
+files.
+
+=cut
+
 use Text::Xslate;
 use Types::Standard -types;
 use Types::Common::String -types;
@@ -54,24 +95,6 @@ has _xslate_args => (
     is => 'ro',
 );
 
-has substitution_tag => (
-    is      => 'ro',
-    isa     => NonEmptySimpleStr,
-    default => '=:',
-);
-
-has nested_key_tag => (
-    is      => 'ro',
-    isa     => NonEmptySimpleStr,
-    default => ':=',
-);
-
-has key_separator => (
-    is      => 'ro',
-    isa     => NonEmptySimpleStr,
-    default => '.',
-);
-
 has _xslate => (
     is       => 'lazy',
     init_arg => undef,
@@ -89,6 +112,85 @@ sub _build__xslate {
         %$args,
     );
 }
+
+=head1 ARGUMENTS
+
+Any arguments you pass to C<new>, which this class does not directly
+handle, will be used when creating the underlying L<Text::Xslate> object.
+So, any arguments which L<Text::Xslate> supports may be set.  For example:
+
+    my $xslate = Data::Xslate->new(
+        substitution_tag => ']]', # A Data::Xslate argument.
+        verbose          => 2,    # A Text::Xslate option.
+    );
+
+=head2 substitution_tag
+
+The string to look for at the beginning of any string value which
+signifies L</SUBSTITUTION>.  Defaults to C<=:>.  This is used in
+data like this:
+
+    { a=>{ b=>2 }, c => '=:a.b' }
+
+=cut
+
+has substitution_tag => (
+    is      => 'ro',
+    isa     => NonEmptySimpleStr,
+    default => '=:',
+);
+
+=head2 nested_key_tag
+
+The string to look for at the end of any key which signifies
+L</NESTED KEYS>.  Defaults to C<:=>.  This is used in data
+like this:
+
+    { a=>{ b=>2 }, 'a.c:=' => 3 }
+
+=cut
+
+has nested_key_tag => (
+    is      => 'ro',
+    isa     => NonEmptySimpleStr,
+    default => ':=',
+);
+
+=head2 key_separator
+
+The string which will be used between keys.  The default is a dot (C<.>)
+which looks like this:
+
+    { a=>{ b=>2 }, c => '=:a.b' }
+
+Whereas, for example, if you changed the C<key_separator> to a forward
+slash it would look like this:
+
+    { a=>{ b=>2 }, c => '=:a/b' }
+
+Which actually looks pretty good when you do an absolute, rather than
+relative, key:
+
+    { a=>{ b=>2 }, c => '=:/a/b' }
+
+=cut
+
+has key_separator => (
+    is      => 'ro',
+    isa     => NonEmptySimpleStr,
+    default => '.',
+);
+
+=head1 METHODS
+
+=head2 render
+
+    my $data_out = $xslate->render( $data_in );
+
+Processes the data and returns new data.  The passed in data is not
+modified.
+
+=cut
 
 # State variables, only used during local() calls to maintane
 # state in recursive function calls.
@@ -266,63 +368,10 @@ sub _set_node {
 1;
 __END__
 
-=head1 NAME
-
-Data::Xslate - Templatize your data.
-
-=head1 SYNOPSIS
-
-    use Data::Xslate;
-    
-    my $xslate = Data::Xslate->new();
-    
-    my $data = $xslate->render(
-        {
-            user => {
-                login => 'john',
-                email => '<: $login :>@example.com',
-                name  => 'John',
-            },
-            email => {
-                to      => '=:user.email',
-                subject => 'Hello <: $user.name :>!',
-            },
-            'email.from:=' => 'george@example.com',
-        },
-    );
-    
-    # This would produce the following:
-    # $data->{email} = {
-    #     to => 'john@example.com',
-    #     from => 'george@example.com',
-    #     subject => 'Hello John!',
-    # }
-
-=head1 DESCRIPTION
-
-This module provides a syntax for templatizing data structures.
-
-The most likely use-case is adding some flexibility to configuration
-files.
-
-=head1 SUBSTITUTION
-
-    {
-        foo => 14,
-        bar => '=:foo',
-    }
-    # { foo=>14, bar=>14 }
-
-This injects the target value.  This can be used for any data type.  For
-example we can substitute an array:
-
-    {
-        foo => [1,2,3],
-        bar => '=:foo',
-    }
-    # { foo=>[1,2,3], bar=>[1,2,3] }
-
 =head1 TEMPLATING
+
+The most powerful feature by far is templating, where you can
+use L<Text::Xslate> in you values.
 
     {
         foo => 'green',
@@ -330,14 +379,81 @@ example we can substitute an array:
     }
     # { foo=>'green', bar=>'It is green!' }
 
-The syntax for templating is provided by L<Text::Xslate>, so
-there is a lot of power here including being able to do math
-and string mangling.
+There is a lot you can do with this beyond simply including values
+from other keys:
+
+    {
+        prod => 1,
+        memcached_host => '<: if $prod { :>memcached.example.com<: } else { :>127.0.0.1<: } :>',
+    }
+
+Values in arrays are also processed for templating:
+
+    {
+        ceo_name => 'Sara',
+        employees => [
+            '<: $ceo_name :>',
+            'Fred',
+            'Alice',
+        ],
+    }
+
+Data structures of any arbitrary depth and complexity are handled
+correctly, and keys from any level can be referred to following
+the L</SCOPE> rules.
+
+=head1 SUBSTITUTION
+
+Substituion allows you to retrieve a value from one key and use it
+as the value for the current key.  To do this your hash or array
+value must start with the L</substitution_tag> (defaults to C<=:>):
+
+    {
+        foo => 14,
+        bar => '=:foo',
+    }
+    # { foo=>14, bar=>14 }
+
+While the above could just have been written using templating:
+
+    {
+        foo => 14,
+        bar => '<: $foo :>',
+    }
+
+But, templating only works with strings.  Substitution becomes vital
+when you want to substitute an array or hash:
+
+    {
+        foo => [1,2,3],
+        bar => '=:foo',
+    }
+    # { foo=>[1,2,3], bar=>[1,2,3] }
+
+The keys in substitution follow the L</SCOPE> rules.
+
+=head1 NESTED KEYS
+
+When setting a key value the key can point deeper into the structure by
+separating keys with the L</key_separator> (defaults to a dot, C<.>),
+and ending the key with the L</nested_key_tag> (defaults to C<:=>).
+Consider this:
+
+    { a=>{ b=>1 }, 'a.b:=' => 2 }
+
+Which produces:
+
+    { a=>{ b=>2 } }
+
+So, nested keys are a way to set values in other data structures.  This
+feature is very handy when you are merging data structures from different
+sources and one data structure will override a subset of values in the
+other.
 
 =head1 SCOPE
 
 When using either L</SUBSTITUTION> or L</TEMPLATING> you specify a key to be
-included.  This key is found using scope-aware rules where the key is searched for
+acted on.  This key is found using scope-aware rules where the key is searched for
 in a similar fashion to how you'd expect when dealing with lexical variables in
 programming.
 
@@ -360,72 +476,9 @@ You may refer to a key in a higher scope that is nested:
 The logic behind this is pretty flexible, so more complex use cases will
 just work like you would expect.
 
-If you'd rather avoid this scoping you can prepend any key with a dot, C<.>, and
-it will be looked for at the root hash of the config tree only.
-
-=head1 NESTED KEYS
-
-When setting a key value the key can point deeper into the structure by separating keys with
-a dot, C<.>, and ending the key with C<:=>.  Consider this:
-
-    { a=>{ b=>1 }, 'a.b:=' => 2 }
-
-Which produces:
-
-    { a=>{ b=>2 } }
-
-=head1 ARGUMENTS
-
-Any arguments you pass to C<new>, which this class does not directly
-handle, will be used when creating the L</xslate> object.  So, any
-arguments which L<Text::Xslate> supports may be set.  For example:
-
-    my $xslate = Data::Xslate->new(
-        substitution_tag => ']]', # A Data::Xslate argument.
-        verbose          => 2,    # A Text::Xslate option.
-    );
-
-=head2 substitution_tag
-
-The string to look for at the beginning of any string value which
-signifies L</SUBSTITUTION>.  Defaults to C<=:>.  This is used in
-data like this:
-
-    { a=>{ b=>2 }, c => '=:a.b' }
-
-=head2 nested_key_tag
-
-The string to look for at the end of any key which signifies
-L</NESTED KEYS>.  Defaults to C<:=>.  This is used in data
-like this:
-
-    { a=>{ b=>2 }, 'a.c:=' => 3 }
-
-=head2 key_separator
-
-The string which will be used between keys.  The default is a dot (C<.>)
-which looks like this:
-
-    { a=>{ b=>2 }, c => '=:a.b' }
-
-Whereas, for example, if you changed the C<key_separator> to a forward
-slash it would look like this:
-
-    { a=>{ b=>2 }, c => '=:a/b' }
-
-Which actually looks pretty good when you do an absolute, rather than
-relative, key:
-
-    { a=>{ b=>2 }, c => '=:/a/b' }
-
-=head1 METHODS
-
-=head2 render
-
-    my $data_out = $xslate->render( $data_in );
-
-Processes the data and returns new data.  The passed in data is not
-modified.
+If you'd rather avoid this scoping you can prepend any key with the L</key_separator>
+(defaults to a dot, C<.>), and it will be looked for at the root of the config data
+only.
 
 =head1 AUTHOR
 
