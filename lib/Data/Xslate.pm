@@ -45,6 +45,7 @@ use Text::Xslate;
 use Types::Standard -types;
 use Types::Common::String -types;
 use Carp qw( croak );
+use Storable qw( freeze thaw );
 
 use Moo;
 use strictures 2;
@@ -205,6 +206,8 @@ our $PATH_FOR_XSLATE;
 
 sub render {
     my ($self, $data) = @_;
+
+    $data = thaw( freeze( $data ) );
 
     local $Carp::Internal{ (__PACKAGE__) } = 1;
 
@@ -367,7 +370,7 @@ __END__
 =head1 TEMPLATING
 
 The most powerful feature by far is templating, where you can
-use L<Text::Xslate> in you values.
+use L<Text::Xslate> in your values.
 
     {
         foo => 'green',
@@ -461,7 +464,7 @@ a key path such as C<bar.0> you are looking for a hash with the C<bar>
 key whose value is an array, and then the first value in the array is
 fetched.
 
-Note that the above example assume that L</key_separator> is a dot (C<.>),
+Note that the above examples assume that L</key_separator> is a dot (C<.>),
 the default.
 
 =head1 SCOPE

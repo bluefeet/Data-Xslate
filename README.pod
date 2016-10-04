@@ -95,7 +95,7 @@ modified.
 =head1 TEMPLATING
 
 The most powerful feature by far is templating, where you can
-use L<Text::Xslate> in you values.
+use L<Text::Xslate> in your values.
 
     {
         foo => 'green',
@@ -189,7 +189,7 @@ a key path such as C<bar.0> you are looking for a hash with the C<bar>
 key whose value is an array, and then the first value in the array is
 fetched.
 
-Note that the above example assume that L</key_separator> is a dot (C<.>),
+Note that the above examples assume that L</key_separator> is a dot (C<.>),
 the default.
 
 =head1 SCOPE
