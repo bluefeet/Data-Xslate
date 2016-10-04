@@ -201,7 +201,6 @@ our $NODES;
 our $SUBSTITUTION_TAG;
 our $NESTED_KEY_TAG;
 our $KEY_SEPARATOR;
-our $KEY_SEPARATOR_RE;
 our $PATH_FOR_XSLATE;
 
 sub render {
@@ -220,9 +219,6 @@ sub render {
     local $SUBSTITUTION_TAG = $self->substitution_tag();
     local $NESTED_KEY_TAG = $self->nested_key_tag();
     local $KEY_SEPARATOR = $self->key_separator();
-    local $KEY_SEPARATOR_RE = $KEY_SEPARATOR;
-    $KEY_SEPARATOR_RE =~ s{(.)}{\\$1}g;
-    $KEY_SEPARATOR_RE = qr{$KEY_SEPARATOR_RE};
 
     return _evaluate_node( 'root' => $data );
 }
@@ -234,7 +230,7 @@ sub _evaluate_node {
 
     if (!ref $node) {
         if (defined $node) {
-            if ($node =~ m{^$SUBSTITUTION_TAG\s*(.+?)\s*$}) {
+            if ($node =~ m{^\Q$SUBSTITUTION_TAG\E\s*(.+?)\s*$}) {
                 $node = _find_node( $1, $path );
             }
             else {
@@ -247,8 +243,8 @@ sub _evaluate_node {
     elsif (ref($node) eq 'HASH') {
         $NODES->{$path} = $node;
         foreach my $key (sort keys %$node) {
-            if ($key =~ m{^(.*)$NESTED_KEY_TAG$}) {
-                my $sub_path = "$path.$1";
+            if ($key =~ m{^(.*)\Q$NESTED_KEY_TAG\E$}) {
+                my $sub_path = "$path$KEY_SEPARATOR$1";
                 my $value = delete $node->{$key};
                 _set_node( $sub_path, $value );
             }
@@ -275,7 +271,7 @@ sub _evaluate_node {
 sub _load_node {
     my ($path) = @_;
 
-    my @parts = split(/$KEY_SEPARATOR_RE/, $path);
+    my @parts = split(/\Q$KEY_SEPARATOR\E/, $path);
     my $built_path = shift( @parts ); # root
 
     my $node = $ROOT;
@@ -302,12 +298,12 @@ sub _load_node {
 sub _find_node {
     my ($path, $from_path) = @_;
 
-    if ($path =~ m{^$KEY_SEPARATOR_RE(.+)}) {
+    if ($path =~ m{^\Q$KEY_SEPARATOR\E(.+)}) {
         $path = $1;
         $from_path = "root${KEY_SEPARATOR}root_sub_key_that_is_not_used_for_absolute_keys";
     }
 
-    my @parts = split(/$KEY_SEPARATOR_RE/, $from_path);
+    my @parts = split(/\Q$KEY_SEPARATOR\E/, $from_path);
     pop( @parts );
 
     while (@parts) {
@@ -330,7 +326,7 @@ sub _find_node_for_xslate {
 sub _set_node {
     my ($path, $value) = @_;
 
-    my @parts = split(/$KEY_SEPARATOR_RE/, $path);
+    my @parts = split(/\Q$KEY_SEPARATOR\E/, $path);
     my $built_path = shift( @parts ); # root
     my $last_part = pop( @parts );
 

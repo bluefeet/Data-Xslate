@@ -2,6 +2,9 @@ Revision history for Perl extension Data::Xslate.
 
 {{$NEXT}}
 
+ - Fixed a bunch of nasty little bugs found by creating a new test
+   which checks permutations of nested_key_tag, substitution_tag,
+   and key_separator.
  - Changed the default nested_key_tag and substitution_tag to
    a plane old equals sign.  This may not work great in all situations,
    but its simple and easy to change.
