@@ -39,6 +39,7 @@ around BUILDARGS => sub{
     my @expected_args = qw(
         substitution_tag
         nested_key_tag
+        key_separator
     );
     foreach my $arg (@expected_args) {
         next if !exists $xslate_args->{$arg};
@@ -63,6 +64,12 @@ has nested_key_tag => (
     is      => 'ro',
     isa     => NonEmptySimpleStr,
     default => ':=',
+);
+
+has key_separator => (
+    is      => 'ro',
+    isa     => NonEmptySimpleStr,
+    default => '.',
 );
 
 has _xslate => (
@@ -91,6 +98,8 @@ our $ROOT;
 our $NODES;
 our $SUBSTITUTION_TAG;
 our $NESTED_KEY_TAG;
+our $KEY_SEPARATOR;
+our $KEY_SEPARATOR_RE;
 our $PATH_FOR_XSLATE;
 
 sub render {
@@ -108,6 +117,10 @@ sub render {
     local $NODES = {};
     local $SUBSTITUTION_TAG = $self->substitution_tag();
     local $NESTED_KEY_TAG = $self->nested_key_tag();
+    local $KEY_SEPARATOR = $self->key_separator();
+    local $KEY_SEPARATOR_RE = $KEY_SEPARATOR;
+    $KEY_SEPARATOR_RE =~ s{(.)}{\\$1}g;
+    $KEY_SEPARATOR_RE = qr{$KEY_SEPARATOR_RE};
 
     return _evaluate_node( 'root' => $data );
 }
@@ -138,7 +151,7 @@ sub _evaluate_node {
                 _set_node( $sub_path, $value );
             }
             else {
-                my $sub_path = "$path.$key";
+                my $sub_path = "$path$KEY_SEPARATOR$key";
                 $node->{$key} = _evaluate_node( $sub_path, $node->{$key} );
             }
         }
@@ -146,7 +159,7 @@ sub _evaluate_node {
     elsif (ref($node) eq 'ARRAY') {
         $NODES->{$path} = $node;
         @$node = (
-            map { _evaluate_node( "$path.$_" => $node->[$_] ) }
+            map { _evaluate_node( "$path$KEY_SEPARATOR$_" => $node->[$_] ) }
             (0..$#$node)
         );
     }
@@ -160,13 +173,13 @@ sub _evaluate_node {
 sub _load_node {
     my ($path) = @_;
 
-    my @parts = split(/\./, $path);
+    my @parts = split(/$KEY_SEPARATOR_RE/, $path);
     my $built_path = shift( @parts ); # root
 
     my $node = $ROOT;
     while (@parts) {
         my $key = shift( @parts );
-        $built_path .= ".$key";
+        $built_path .= "$KEY_SEPARATOR$key";
 
         if (ref($node) eq 'HASH') {
             return undef if !exists $node->{$key};
@@ -187,18 +200,18 @@ sub _load_node {
 sub _find_node {
     my ($path, $from_path) = @_;
 
-    if ($path =~ m{^\.(.+)}) {
+    if ($path =~ m{^$KEY_SEPARATOR_RE(.+)}) {
         $path = $1;
-        $from_path = 'root.foo';
+        $from_path = "root${KEY_SEPARATOR}root_sub_key_that_is_not_used_for_absolute_keys";
     }
 
-    my @parts = split(/\./, $from_path);
+    my @parts = split(/$KEY_SEPARATOR_RE/, $from_path);
     pop( @parts );
 
     while (@parts) {
-        my $sub_path = join('.', @parts);
+        my $sub_path = join($KEY_SEPARATOR, @parts);
 
-        my $node = _load_node( "$sub_path.$path" );
+        my $node = _load_node( "$sub_path$KEY_SEPARATOR$path" );
         return $node if $node;
 
         pop( @parts );
@@ -215,14 +228,14 @@ sub _find_node_for_xslate {
 sub _set_node {
     my ($path, $value) = @_;
 
-    my @parts = split(/\./, $path);
+    my @parts = split(/$KEY_SEPARATOR_RE/, $path);
     my $built_path = shift( @parts ); # root
     my $last_part = pop( @parts );
 
     my $node = $ROOT;
     while (@parts) {
         my $key = shift( @parts );
-        $built_path .= ".$key";
+        $built_path .= "$KEY_SEPARATOR$key";
 
         if (ref($node) eq 'HASH') {
             return 0 if !exists $node->{$key};
@@ -375,18 +388,44 @@ arguments which L<Text::Xslate> supports may be set.  For example:
 =head2 substitution_tag
 
 The string to look for at the beginning of any string value which
-signifies L</SUBSTITUTION>.  Defaults to C<=:>.
+signifies L</SUBSTITUTION>.  Defaults to C<=:>.  This is used in
+data like this:
+
+    { a=>{ b=>2 }, c => '=:a.b' }
 
 =head2 nested_key_tag
 
 The string to look for at the end of any key which signifies
-L</NESTED KEYS>.  Defaults to C<:=>.
+L</NESTED KEYS>.  Defaults to C<:=>.  This is used in data
+like this:
+
+    { a=>{ b=>2 }, 'a.c:=' => 3 }
+
+=head2 key_separator
+
+The string which will be used between keys.  The default is a dot (C<.>)
+which looks like this:
+
+    { a=>{ b=>2 }, c => '=:a.b' }
+
+Whereas, for example, if you changed the C<key_separator> to a forward
+slash it would look like this:
+
+    { a=>{ b=>2 }, c => '=:a/b' }
+
+Which actually looks pretty good when you do an absolute, rather than
+relative, key:
+
+    { a=>{ b=>2 }, c => '=:/a/b' }
 
 =head1 METHODS
 
 =head2 render
 
     my $data_out = $xslate->render( $data_in );
+
+Processes the data and returns new data.  The passed in data is not
+modified.
 
 =head1 AUTHOR
 

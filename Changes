@@ -2,7 +2,10 @@ Revision history for Perl extension Data::Xslate.
 
 {{$NEXT}}
 
- - Make the nested keys syntax more explicit.
+ - Add a key_separator argument so the syntax of referring to
+   keys in a different scope can be customized a bit.
+ - Make the nested keys syntax more explicit by supporting a
+   nested_key_tag argument.
  - Stop CPAN from indexing an internal package.
  - Add Text::Xslate to dependencies.
 

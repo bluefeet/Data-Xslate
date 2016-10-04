@@ -122,18 +122,44 @@ arguments which L<Text::Xslate> supports may be set.  For example:
 =head2 substitution_tag
 
 The string to look for at the beginning of any string value which
-signifies L</SUBSTITUTION>.  Defaults to C<=:>.
+signifies L</SUBSTITUTION>.  Defaults to C<=:>.  This is used in
+data like this:
+
+    { a=>{ b=>2 }, c => '=:a.b' }
 
 =head2 nested_key_tag
 
 The string to look for at the end of any key which signifies
-L</NESTED KEYS>.  Defaults to C<:=>.
+L</NESTED KEYS>.  Defaults to C<:=>.  This is used in data
+like this:
+
+    { a=>{ b=>2 }, 'a.c:=' => 3 }
+
+=head2 key_separator
+
+The string which will be used between keys.  The default is a dot (C<.>)
+which looks like this:
+
+    { a=>{ b=>2 }, c => '=:a.b' }
+
+Whereas, for example, if you changed the C<key_separator> to a forward
+slash it would look like this:
+
+    { a=>{ b=>2 }, c => '=:a/b' }
+
+Which actually looks pretty good when you do an absolute, rather than
+relative, key:
+
+    { a=>{ b=>2 }, c => '=:/a/b' }
 
 =head1 METHODS
 
 =head2 render
 
     my $data_out = $xslate->render( $data_in );
+
+Processes the data and returns new data.  The passed in data is not
+modified.
 
 =head1 AUTHOR
 
