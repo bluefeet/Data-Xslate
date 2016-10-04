@@ -4,6 +4,7 @@ Revision history for Perl extension Data::Xslate.
 
  - Stop modifying the passed in data structure, and add a test
    which verifies this.
+ - Fix shabang lines in .t files.
 
 0.02 2016-10-04
 

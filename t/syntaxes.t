@@ -1,4 +1,4 @@
-#!/usr/bin/zrperl
+#!/usr/bin/env perl
 use Test2::Bundle::Extended;
 use strictures 2;
 
