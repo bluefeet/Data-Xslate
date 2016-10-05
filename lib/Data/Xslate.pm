@@ -515,6 +515,13 @@ But if you wanted to refer to an absolute key you'd have to do this:
 
     <: node(".foo.bar") :>
 
+=head1 SUPPORT
+
+Please submit bugs and feature requests to the
+Data-Xslate GitHub issue tracker:
+
+L<https://github.com/bluefeet/Data-Xslate/issues>
+
 =head1 AUTHOR
 
 Aran Clary Deltac <bluefeetE<64>gmail.com>
