@@ -25,11 +25,18 @@ Data::Xslate - Templatize your data.
         },
     );
     
-    # This would produce the following:
-    # $data->{email} = {
-    #     to => 'john@example.com',
-    #     from => 'george@example.com',
-    #     subject => 'Hello John!',
+    # The above produces the following:
+    # $data = {
+    #     user => {
+    #         login => 'john',
+    #         email => 'john@example.com',
+    #         name  => 'John',
+    #     },
+    #     email => {
+    #         to      => 'john@example.com',
+    #         from    => 'george@example.com',
+    #         subject => 'Hello John!',
+    #     },
     # }
 
 =head1 DESCRIPTION
