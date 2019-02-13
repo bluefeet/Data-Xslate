@@ -3,6 +3,7 @@ Revision history for Perl extension Data-Xslate.
 {{$NEXT}}
 
  - Make the SYNOPSIS a bit more interesting, and test it.
+ - Some documentation tweaks.
 
 0.04 2019-02-13T18:06:57Z
 

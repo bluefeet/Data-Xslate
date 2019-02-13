@@ -27,8 +27,7 @@ Data::Xslate - Templatize your data.
         },
     );
     
-    # The above produces the following:
-    # $data = {
+    # {
     #     color_names => ['red', 'blue', 'orange'],
     #     email => {
     #         from => 'george@example.com',
@@ -49,9 +48,6 @@ Data::Xslate - Templatize your data.
 
 This module provides a syntax for templatizing data structures.
 
-The most likely use-case is adding some flexibility to configuration
-files.
-
 # ARGUMENTS
 
 Any arguments you pass to `new`, which this class does not directly
@@ -70,6 +66,7 @@ signifies ["SUBSTITUTION"](#substitution).  Defaults to `=`.  This is used in
 data like this:
 
     { a=>{ b=>2 }, c => '=a.b' }
+    # { a=>{ b=>2 }, c => 2 }
 
 ## nested\_key\_tag
 
@@ -78,6 +75,7 @@ The string to look for at the end of any key which signifies
 like this:
 
     { a=>{ b=>2 }, 'a.c=' => 3 }
+    # { a=>{ b=>2, c=>3 } }
 
 ## key\_separator
 
@@ -91,8 +89,7 @@ slash it would look like this:
 
     { a=>{ b=>2 }, c => '=a/b' }
 
-Which actually looks pretty good when you do an absolute, rather than
-relative, key:
+Which looks rather good with absolute keys:
 
     { a=>{ b=>2 }, c => '=/a/b' }
 
@@ -123,6 +120,7 @@ from other keys:
         prod => 1,
         memcached_host => '<: if $prod { :>memcached.example.com<: } else { :>127.0.0.1<: } :>',
     }
+    # { prod=>1, memcached_host=>'memcached.example.com' }
 
 Values in arrays are also processed for templating:
 
@@ -134,6 +132,14 @@ Values in arrays are also processed for templating:
             'Alice',
         ],
     }
+    # {
+    #     ceo_name => 'Sara',
+    #     employees => [
+    #         'Sara',
+    #         'Fred',
+    #         'Alice',
+    #     ],
+    # }
 
 Data structures of any arbitrary depth and complexity are handled
 correctly, and keys from any level can be referred to following
@@ -151,14 +157,14 @@ value must start with the ["substitution\_tag"](#substitution_tag) (defaults to 
     }
     # { foo=>14, bar=>14 }
 
-While the above could just have been written using templating:
+Templating could be used instead of substitution:
 
     {
         foo => 14,
         bar => '<: $foo :>',
     }
 
-But, templating only works with strings.  Substitution becomes vital
+But, templating only works with strings.  Substitutions become vital
 when you want to substitute an array or hash:
 
     {
@@ -177,10 +183,7 @@ and ending the key with the ["nested\_key\_tag"](#nested_key_tag) (defaults to `
 Consider this:
 
     { a=>{ b=>1 }, 'a.b=' => 2 }
-
-Which produces:
-
-    { a=>{ b=>2 } }
+    # { a=>{ b=>2 } }
 
 So, nested keys are a way to set values in other data structures.  This
 feature is very handy when you are merging data structures from different
