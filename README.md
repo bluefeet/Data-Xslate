@@ -1,10 +1,8 @@
-=pod
-
-=head1 NAME
+# NAME
 
 Data::Xslate - Templatize your data.
 
-=head1 SYNOPSIS
+# SYNOPSIS
 
     use Data::Xslate;
     
@@ -39,48 +37,48 @@ Data::Xslate - Templatize your data.
     #     },
     # }
 
-=head1 DESCRIPTION
+# DESCRIPTION
 
 This module provides a syntax for templatizing data structures.
 
 The most likely use-case is adding some flexibility to configuration
 files.
 
-=head1 ARGUMENTS
+# ARGUMENTS
 
-Any arguments you pass to C<new>, which this class does not directly
-handle, will be used when creating the underlying L<Text::Xslate> object.
-So, any arguments which L<Text::Xslate> supports may be set.  For example:
+Any arguments you pass to `new`, which this class does not directly
+handle, will be used when creating the underlying [Text::Xslate](https://metacpan.org/pod/Text::Xslate) object.
+So, any arguments which [Text::Xslate](https://metacpan.org/pod/Text::Xslate) supports may be set.  For example:
 
     my $xslate = Data::Xslate->new(
         substitution_tag => ']]', # A Data::Xslate argument.
         verbose          => 2,    # A Text::Xslate option.
     );
 
-=head2 substitution_tag
+## substitution\_tag
 
 The string to look for at the beginning of any string value which
-signifies L</SUBSTITUTION>.  Defaults to C<=>.  This is used in
+signifies ["SUBSTITUTION"](#substitution).  Defaults to `=`.  This is used in
 data like this:
 
     { a=>{ b=>2 }, c => '=a.b' }
 
-=head2 nested_key_tag
+## nested\_key\_tag
 
 The string to look for at the end of any key which signifies
-L</NESTED KEYS>.  Defaults to C<=>.  This is used in data
+["NESTED KEYS"](#nested-keys).  Defaults to `=`.  This is used in data
 like this:
 
     { a=>{ b=>2 }, 'a.c=' => 3 }
 
-=head2 key_separator
+## key\_separator
 
-The string which will be used between keys.  The default is a dot (C<.>)
+The string which will be used between keys.  The default is a dot (`.`)
 which looks like this:
 
     { a=>{ b=>2 }, c => '=a.b' }
 
-Whereas, for example, if you changed the C<key_separator> to a forward
+Whereas, for example, if you changed the `key_separator` to a forward
 slash it would look like this:
 
     { a=>{ b=>2 }, c => '=a/b' }
@@ -90,19 +88,19 @@ relative, key:
 
     { a=>{ b=>2 }, c => '=/a/b' }
 
-=head1 METHODS
+# METHODS
 
-=head2 render
+## render
 
     my $data_out = $xslate->render( $data_in );
 
 Processes the data and returns new data.  The passed in data is not
 modified.
 
-=head1 TEMPLATING
+# TEMPLATING
 
 The most powerful feature by far is templating, where you can
-use L<Text::Xslate> in your values.
+use [Text::Xslate](https://metacpan.org/pod/Text::Xslate) in your values.
 
     {
         foo => 'green',
@@ -131,13 +129,13 @@ Values in arrays are also processed for templating:
 
 Data structures of any arbitrary depth and complexity are handled
 correctly, and keys from any level can be referred to following
-the L</SCOPE> rules.
+the ["SCOPE"](#scope) rules.
 
-=head1 SUBSTITUTION
+# SUBSTITUTION
 
 Substituion allows you to retrieve a value from one key and use it
 as the value for the current key.  To do this your hash or array
-value must start with the L</substitution_tag> (defaults to C<=>):
+value must start with the ["substitution\_tag"](#substitution_tag) (defaults to `=`):
 
     {
         foo => 14,
@@ -161,13 +159,13 @@ when you want to substitute an array or hash:
     }
     # { foo=>[1,2,3], bar=>[1,2,3] }
 
-The keys in substitution follow the L</SCOPE> rules.
+The keys in substitution follow the ["SCOPE"](#scope) rules.
 
-=head1 NESTED KEYS
+# NESTED KEYS
 
 When setting a key value the key can point deeper into the structure by
-separating keys with the L</key_separator> (defaults to a dot, C<.>),
-and ending the key with the L</nested_key_tag> (defaults to C<=>).
+separating keys with the ["key\_separator"](#key_separator) (defaults to a dot, `.`),
+and ending the key with the ["nested\_key\_tag"](#nested_key_tag) (defaults to `=`).
 Consider this:
 
     { a=>{ b=>1 }, 'a.b=' => 2 }
@@ -181,27 +179,27 @@ feature is very handy when you are merging data structures from different
 sources and one data structure will override a subset of values in the
 other.
 
-=head1 KEY PATHS
+# KEY PATHS
 
-When referring to other values in L</TEMPLATING>, L</SUBSTITUTION>, or
-L</NESTED KEYS> you are specifying a path made up of keys for this module
+When referring to other values in ["TEMPLATING"](#templating), ["SUBSTITUTION"](#substitution), or
+["NESTED KEYS"](#nested-keys) you are specifying a path made up of keys for this module
 to walk and find a value to retrieve.
 
-So, when you specify a key path such as C<foo.bar> you are looking for a hash
-with the key C<foo> who's value is a hash and then retrieving the value
-of the C<bar> key in it.
+So, when you specify a key path such as `foo.bar` you are looking for a hash
+with the key `foo` who's value is a hash and then retrieving the value
+of the `bar` key in it.
 
 Arrays are fully supported in these key paths so that if you specify
-a key path such as C<bar.0> you are looking for a hash with the C<bar>
+a key path such as `bar.0` you are looking for a hash with the `bar`
 key whose value is an array, and then the first value in the array is
 fetched.
 
-Note that the above examples assume that L</key_separator> is a dot (C<.>),
+Note that the above examples assume that ["key\_separator"](#key_separator) is a dot (`.`),
 the default.
 
-=head1 SCOPE
+# SCOPE
 
-When using either L</SUBSTITUTION> or L</TEMPLATING> you specify a key to be
+When using either ["SUBSTITUTION"](#substitution) or ["TEMPLATING"](#templating) you specify a key to be
 acted on.  This key is found using scope-aware rules where the key is searched for
 in a similar fashion to how you'd expect when dealing with lexical variables in
 programming.
@@ -225,11 +223,11 @@ You may refer to a key in a higher scope that is nested:
 The logic behind this is pretty flexible, so more complex use cases will
 just work like you would expect.
 
-If you'd rather avoid this scoping you can prepend any key with the L</key_separator>
-(defaults to a dot, C<.>), and it will be looked for at the root of the config data
+If you'd rather avoid this scoping you can prepend any key with the ["key\_separator"](#key_separator)
+(defaults to a dot, `.`), and it will be looked for at the root of the config data
 only.
 
-In the case of templating a special C<node> function is provided which
+In the case of templating a special `node` function is provided which
 will allow you to retrieve an absolute key.  For example these two lines
 would do the same thing (printing out a relative key value):
 
@@ -240,27 +238,25 @@ But if you wanted to refer to an absolute key you'd have to do this:
 
     <: node(".foo.bar") :>
 
-=head1 SUPPORT
+# SUPPORT
 
 Please submit bugs and feature requests to the
 Data-Xslate GitHub issue tracker:
 
-L<https://github.com/bluefeet/Data-Xslate/issues>
+[https://github.com/bluefeet/Data-Xslate/issues](https://github.com/bluefeet/Data-Xslate/issues)
 
-=head1 AUTHOR
+# AUTHOR
 
-Aran Clary Deltac <bluefeetE<64>gmail.com>
+Aran Deltac <bluefeet@gmail.com>
 
-=head1 ACKNOWLEDGEMENTS
+# ACKNOWLEDGEMENTS
 
-Thanks to L<ZipRecruiter|https://www.ziprecruiter.com/>
+Thanks to [ZipRecruiter](https://www.ziprecruiter.com/)
 for encouraging their employees to contribute back to the open
 source ecosystem.  Without their dedication to quality software
 development this distribution would not exist.
 
-=head1 LICENSE
+# LICENSE
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
-
-=cut

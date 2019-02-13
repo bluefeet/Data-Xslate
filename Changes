@@ -1,7 +1,8 @@
-Revision history for Perl extension Data::Xslate.
+Revision history for Perl extension Data-Xslate.
 
 {{$NEXT}}
 
+ - Migrate build tooling from Dist::Zilla to Minilla.
  - Remove most dependencies.
 
 0.03 2016-10-05

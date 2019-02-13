@@ -1,5 +1,7 @@
 package Data::Xslate;
 
+$Data::Xslate::VERSION = '0.03';
+
 use Text::Xslate;
 use Carp qw( croak );
 use Storable qw( freeze thaw );
@@ -487,7 +489,7 @@ L<https://github.com/bluefeet/Data-Xslate/issues>
 
 =head1 AUTHOR
 
-Aran Clary Deltac <bluefeetE<64>gmail.com>
+Aran Deltac <bluefeetE<64>gmail.com>
 
 =head1 ACKNOWLEDGEMENTS
 
