@@ -44,7 +44,8 @@
          "requires" : {
             "Carp" : "0",
             "Storable" : "0",
-            "Text::Xslate" : "3"
+            "Text::Xslate" : "3",
+            "Tie::Hash" : "0"
          }
       },
       "test" : {
