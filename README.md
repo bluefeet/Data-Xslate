@@ -10,14 +10,18 @@ Data::Xslate - Templatize your data.
     
     my $data = $xslate->render(
         {
+            color_names => ['red', 'blue', 'orange'],
             user => {
                 login => 'john',
                 email => '<: $login :>@example.com',
                 name  => 'John',
+                color_id => 2,
+                color_name => '<: node("color_names")[$color_id] :>',
             },
             email => {
                 to      => '=user.email',
                 subject => 'Hello <: $user.name :>!',
+                message => 'Do you like the color <: $user.color_name :>?',
             },
             'email.from=' => 'george@example.com',
         },
@@ -25,15 +29,19 @@ Data::Xslate - Templatize your data.
     
     # The above produces the following:
     # $data = {
-    #     user => {
-    #         login => 'john',
-    #         email => 'john@example.com',
-    #         name  => 'John',
-    #     },
+    #     color_names => ['red', 'blue', 'orange'],
     #     email => {
-    #         to      => 'john@example.com',
-    #         from    => 'george@example.com',
+    #         from => 'george@example.com',
+    #         message => 'Do you like the color orange?',
     #         subject => 'Hello John!',
+    #         to => 'john@example.com',
+    #     },
+    #     user => {
+    #         color_id => '2',
+    #         color_name => 'orange',
+    #         email => 'john@example.com',
+    #         login => 'john',
+    #         name => 'John',
     #     },
     # }
 
