@@ -1,6 +1,6 @@
 package Data::Xslate;
 
-$Data::Xslate::VERSION = '0.04';
+$Data::Xslate::VERSION = '0.05';
 
 use Text::Xslate;
 use Carp qw( croak );
@@ -49,7 +49,7 @@ sub new {
 
     my $function = delete( $args->{function} ) || {};
     $function->{node} ||= \&_find_node_for_xslate;
-    $self->{xslate} = Text::Xslate->new(
+    $self->{_xslate} = Text::Xslate->new(
         type     => 'text',
         function => $function,
         %$args,
@@ -64,9 +64,9 @@ sub nested_key_tag { $_[0]->{nested_key_tag} }
 sub key_separator { $_[0]->{key_separator} }
 
 # Attributes.
-sub _xslate { $_[0]->{xslate} }
+sub _xslate { $_[0]->{_xslate} }
 
-# State variables, only used during local() calls to maintane
+# State variables, only used during local() calls to maintain
 # state in recursive function calls.
 our $XSLATE;
 our $VARS;
@@ -250,45 +250,201 @@ Data::Xslate - Templatize your data.
     
     my $xslate = Data::Xslate->new();
     
-    my $data = $xslate->render(
-        {
-            color_names => ['red', 'blue', 'orange'],
-            user => {
-                login => 'john',
-                email => '<: $login :>@example.com',
-                name  => 'John',
-                color_id => 2,
-                color_name => '<: node("color_names")[$color_id] :>',
-            },
-            email => {
-                to      => '=user.email',
-                subject => 'Hello <: $user.name :>!',
-                message => 'Do you like the color <: $user.color_name :>?',
-            },
-            'email.from=' => 'george@example.com',
+    my $output = $xslate->render( $input );
+
+Given this input data structure:
+
+    {
+        color_names => ['red', 'blue', 'orange'],
+        email => {
+            message => 'Do you like the color <: $user.color_name :>?',
+            subject => 'Hello <: $user.name :>!',
+            to      => '=user.email',
         },
-    );
-    
-    # {
-    #     color_names => ['red', 'blue', 'orange'],
-    #     email => {
-    #         from => 'george@example.com',
-    #         message => 'Do you like the color orange?',
-    #         subject => 'Hello John!',
-    #         to => 'john@example.com',
-    #     },
-    #     user => {
-    #         color_id => '2',
-    #         color_name => 'orange',
-    #         email => 'john@example.com',
-    #         login => 'john',
-    #         name => 'John',
-    #     },
-    # }
+        'email.from=' => 'george@example.com',
+        user => {
+            color_id => 2,
+            color_name => '<: node("color_names")[$color_id] :>',
+            email => '<: $login :>@example.com',
+            login => 'john',
+            name  => 'John',
+        },
+    }
+
+This data will be output:
+
+    {
+        color_names => ['red', 'blue', 'orange'],
+        email => {
+            from => 'george@example.com',
+            message => 'Do you like the color orange?',
+            subject => 'Hello John!',
+            to => 'john@example.com',
+        },
+        user => {
+            color_id => '2',
+            color_name => 'orange',
+            email => 'john@example.com',
+            login => 'john',
+            name => 'John',
+        },
+    }
 
 =head1 DESCRIPTION
 
 This module provides a syntax for templatizing data structures.
+
+=head2 Templating
+
+The most powerful feature by far is templating, where you can
+use L<Text::Xslate> in your values.
+
+    {
+        foo => 'green',
+        bar => 'It is <: $foo :>!',
+    }
+    # { foo=>'green', bar=>'It is green!' }
+
+There is a lot you can do with this beyond simply including values
+from other keys:
+
+    {
+        prod => 1,
+        memcached_host => '<: if $prod { :>memcached.example.com<: } else { :>127.0.0.1<: } :>',
+    }
+    # { prod=>1, memcached_host=>'memcached.example.com' }
+
+Values in arrays are also processed for templating:
+
+    {
+        ceo_name => 'Sara',
+        employees => [
+            '<: $ceo_name :>',
+            'Fred',
+            'Alice',
+        ],
+    }
+    # {
+    #     ceo_name => 'Sara',
+    #     employees => [
+    #         'Sara',
+    #         'Fred',
+    #         'Alice',
+    #     ],
+    # }
+
+As well as using array values in a template:
+
+    { foo=>'<: $bar.1 :>', bar=>[4,5,6] }
+    # { foo=>5, bar=>[4,5,6] }
+
+Data structures of any arbitrary depth and complexity are handled
+correctly, and keys from any level can be referred to following
+the L</SCOPE> rules.
+
+=head2 Substitution
+
+Substituion allows you to retrieve a value from one key and use it
+as the value for the current key.  To do this your hash or array
+value must start with the L</substitution_tag> (defaults to C<=>):
+
+    {
+        foo => 14,
+        bar => '=foo',
+    }
+    # { foo=>14, bar=>14 }
+
+Templating could be used instead of substitution:
+
+    {
+        foo => 14,
+        bar => '<: $foo :>',
+    }
+
+But, templating only works with strings.  Substitutions become vital
+when you want to substitute an array or hash:
+
+    {
+        foo => [1,2,3],
+        bar => '=foo',
+    }
+    # { foo=>[1,2,3], bar=>[1,2,3] }
+
+The keys in substitution follow the L</SCOPE> rules.
+
+=head2 Nested Keys
+
+When setting a key value the key can point deeper into the structure by
+separating keys with the L</key_separator> (defaults to a dot, C<.>),
+and ending the key with the L</nested_key_tag> (defaults to C<=>).
+Consider this:
+
+    { a=>{ b=>1 }, 'a.b=' => 2 }
+    # { a=>{ b=>2 } }
+
+So, nested keys are a way to set values in other data structures.  This
+feature is very handy when you are merging data structures from different
+sources and one data structure will override a subset of values in the
+other.
+
+=head2 Key Paths
+
+When referring to other values in L</TEMPLATING>, L</SUBSTITUTION>, or
+L</NESTED KEYS> you are specifying a path made up of keys for this module
+to walk and find a value to retrieve.
+
+So, when you specify a key path such as C<foo.bar> you are looking for a hash
+with the key C<foo> who's value is a hash and then retrieving the value
+of the C<bar> key in it.
+
+Arrays are fully supported in these key paths so that if you specify
+a key path such as C<bar.0> you are looking for a hash with the C<bar>
+key whose value is an array, and then the first value in the array is
+fetched.
+
+Note that the above examples assume that L</key_separator> is a dot (C<.>),
+the default.
+
+=head2 Scope
+
+When using either L</SUBSTITUTION> or L</TEMPLATING> you specify a key to be
+acted on.  This key is found using scope-aware rules where the key is searched for
+in a similar fashion to how you'd expect when dealing with lexical variables in
+programming.
+
+For example, you can refer to a key in the same scope:
+
+    { a=>1, b=>'=a' }
+
+You may refer to a key in a lower scope:
+
+    { a=>{ b=>1 }, c=>'=a.b' }
+
+You may refer to a key in a higher scope:
+
+    { a=>{ b=>'=c' }, c=>1 }
+
+You may refer to a key in a higher scope that is nested:
+
+    { a=>{ b=>'=c.d' }, c=>{ d=>1 } }
+
+The logic behind this is pretty flexible, so more complex use cases will
+just work like you would expect.
+
+If you'd rather avoid this scoping you can prepend any key with the L</key_separator>
+(defaults to a dot, C<.>), and it will be looked for at the root of the config data
+only.
+
+In the case of templating a special C<node> function is provided which
+will allow you to retrieve an absolute key.  For example these two lines
+would do the same thing (printing out a relative key value):
+
+    <: $foo.bar :>
+    <: node("foo.bar") :>
+
+But if you wanted to refer to an absolute key you'd have to do this:
+
+    <: node(".foo.bar") :>
 
 =head1 ARGUMENTS
 
@@ -298,7 +454,7 @@ So, any arguments which L<Text::Xslate> supports may be set.  For example:
 
     my $xslate = Data::Xslate->new(
         substitution_tag => ']]', # A Data::Xslate argument.
-        verbose          => 2,    # A Text::Xslate option.
+        verbose          => 2,    # A Text::Xslate argument.
     );
 
 =head2 substitution_tag
@@ -343,153 +499,6 @@ Which looks rather good with absolute keys:
 
 Processes the data and returns new data.  The passed in data is not
 modified.
-
-=head1 TEMPLATING
-
-The most powerful feature by far is templating, where you can
-use L<Text::Xslate> in your values.
-
-    {
-        foo => 'green',
-        bar => 'It is <: $foo :>!',
-    }
-    # { foo=>'green', bar=>'It is green!' }
-
-There is a lot you can do with this beyond simply including values
-from other keys:
-
-    {
-        prod => 1,
-        memcached_host => '<: if $prod { :>memcached.example.com<: } else { :>127.0.0.1<: } :>',
-    }
-    # { prod=>1, memcached_host=>'memcached.example.com' }
-
-Values in arrays are also processed for templating:
-
-    {
-        ceo_name => 'Sara',
-        employees => [
-            '<: $ceo_name :>',
-            'Fred',
-            'Alice',
-        ],
-    }
-    # {
-    #     ceo_name => 'Sara',
-    #     employees => [
-    #         'Sara',
-    #         'Fred',
-    #         'Alice',
-    #     ],
-    # }
-
-Data structures of any arbitrary depth and complexity are handled
-correctly, and keys from any level can be referred to following
-the L</SCOPE> rules.
-
-=head1 SUBSTITUTION
-
-Substituion allows you to retrieve a value from one key and use it
-as the value for the current key.  To do this your hash or array
-value must start with the L</substitution_tag> (defaults to C<=>):
-
-    {
-        foo => 14,
-        bar => '=foo',
-    }
-    # { foo=>14, bar=>14 }
-
-Templating could be used instead of substitution:
-
-    {
-        foo => 14,
-        bar => '<: $foo :>',
-    }
-
-But, templating only works with strings.  Substitutions become vital
-when you want to substitute an array or hash:
-
-    {
-        foo => [1,2,3],
-        bar => '=foo',
-    }
-    # { foo=>[1,2,3], bar=>[1,2,3] }
-
-The keys in substitution follow the L</SCOPE> rules.
-
-=head1 NESTED KEYS
-
-When setting a key value the key can point deeper into the structure by
-separating keys with the L</key_separator> (defaults to a dot, C<.>),
-and ending the key with the L</nested_key_tag> (defaults to C<=>).
-Consider this:
-
-    { a=>{ b=>1 }, 'a.b=' => 2 }
-    # { a=>{ b=>2 } }
-
-So, nested keys are a way to set values in other data structures.  This
-feature is very handy when you are merging data structures from different
-sources and one data structure will override a subset of values in the
-other.
-
-=head1 KEY PATHS
-
-When referring to other values in L</TEMPLATING>, L</SUBSTITUTION>, or
-L</NESTED KEYS> you are specifying a path made up of keys for this module
-to walk and find a value to retrieve.
-
-So, when you specify a key path such as C<foo.bar> you are looking for a hash
-with the key C<foo> who's value is a hash and then retrieving the value
-of the C<bar> key in it.
-
-Arrays are fully supported in these key paths so that if you specify
-a key path such as C<bar.0> you are looking for a hash with the C<bar>
-key whose value is an array, and then the first value in the array is
-fetched.
-
-Note that the above examples assume that L</key_separator> is a dot (C<.>),
-the default.
-
-=head1 SCOPE
-
-When using either L</SUBSTITUTION> or L</TEMPLATING> you specify a key to be
-acted on.  This key is found using scope-aware rules where the key is searched for
-in a similar fashion to how you'd expect when dealing with lexical variables in
-programming.
-
-For example, you can refer to a key in the same scope:
-
-    { a=>1, b=>'=a' }
-
-You may refer to a key in a lower scope:
-
-    { a=>{ b=>1 }, c=>'=a.b' }
-
-You may refer to a key in a higher scope:
-
-    { a=>{ b=>'=c' }, c=>1 }
-
-You may refer to a key in a higher scope that is nested:
-
-    { a=>{ b=>'=c.d' }, c=>{ d=>1 } }
-
-The logic behind this is pretty flexible, so more complex use cases will
-just work like you would expect.
-
-If you'd rather avoid this scoping you can prepend any key with the L</key_separator>
-(defaults to a dot, C<.>), and it will be looked for at the root of the config data
-only.
-
-In the case of templating a special C<node> function is provided which
-will allow you to retrieve an absolute key.  For example these two lines
-would do the same thing (printing out a relative key value):
-
-    <: $foo.bar :>
-    <: node("foo.bar") :>
-
-But if you wanted to refer to an absolute key you'd have to do this:
-
-    <: node(".foo.bar") :>
 
 =head1 SUPPORT
 
