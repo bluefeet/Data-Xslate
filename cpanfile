@@ -1,4 +1,5 @@
-requires 'Text::Xslate' => 3;
+requires 'Text::Xslate' => '3.0.0';
+
 requires 'Carp';
 requires 'Storable';
 requires 'Tie::Hash';
