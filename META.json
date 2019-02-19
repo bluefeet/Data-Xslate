@@ -45,7 +45,8 @@
             "Carp" : "0",
             "Storable" : "0",
             "Text::Xslate" : "v3.0.0",
-            "Tie::Hash" : "0"
+            "Tie::Hash" : "0",
+            "perl" : "5.008001"
          }
       },
       "test" : {
