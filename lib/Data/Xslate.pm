@@ -1,6 +1,6 @@
 package Data::Xslate;
 
-$Data::Xslate::VERSION = '0.05';
+our $VERSION = '0.05';
 
 use Text::Xslate;
 use Carp qw( croak );
