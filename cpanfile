@@ -1,3 +1,4 @@
+requires 'perl' => '5.008001';
 requires 'Text::Xslate' => '3.0.0';
 
 requires 'Carp';
