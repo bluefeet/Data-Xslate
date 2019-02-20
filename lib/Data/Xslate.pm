@@ -1,13 +1,12 @@
 package Data::Xslate;
-
+use 5.008001;
+use strict;
+use warnings;
 our $VERSION = '0.05';
 
 use Text::Xslate;
 use Carp qw( croak );
 use Storable qw( freeze thaw );
-
-use strict;
-use warnings;
 
 # A tied-hash class used to expose the data as the Xslate
 # vars when processing the data.
