@@ -2,6 +2,7 @@ Revision history for Perl extension Data-Xslate.
 
 {{$NEXT}}
 
+ - Declare deps as modules, not distros.
  - Require perl 5.8.1.
  - Simplify VERSION declarations.
 

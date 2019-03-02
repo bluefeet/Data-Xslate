@@ -506,9 +506,9 @@ Data-Xslate GitHub issue tracker:
 
 L<https://github.com/bluefeet/Data-Xslate/issues>
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Aran Deltac <bluefeetE<64>gmail.com>
+    Aran Clary Deltac <bluefeet@gmail.com>
 
 =head1 ACKNOWLEDGEMENTS
 
