@@ -2,6 +2,8 @@ Revision history for Perl extension Data-Xslate.
 
 {{$NEXT}}
 
+ - Fixed pod error as reported by CPANTS.
+
 0.06 2019-03-02T20:55:36Z
 
  - Declare deps as modules, not distros.
