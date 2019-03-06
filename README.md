@@ -218,7 +218,7 @@ So, any arguments which [Text::Xslate](https://metacpan.org/pod/Text::Xslate) su
 ## substitution\_tag
 
 The string to look for at the beginning of any string value which
-signifies ["SUBSTITUTION"](#substitution).  Defaults to `=`.  This is used in
+signifies ["Substitution"](#substitution).  Defaults to `=`.  This is used in
 data like this:
 
     { a=>{ b=>2 }, c => '=a.b' }
@@ -227,7 +227,7 @@ data like this:
 ## nested\_key\_tag
 
 The string to look for at the end of any key which signifies
-["NESTED KEYS"](#nested-keys).  Defaults to `=`.  This is used in data
+["Nested Keys"](#nested-keys).  Defaults to `=`.  This is used in data
 like this:
 
     { a=>{ b=>2 }, 'a.c=' => 3 }
