@@ -239,6 +239,8 @@ sub _set_node {
 1;
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 Data::Xslate - Templatize your data.
@@ -522,4 +524,6 @@ development this distribution would not exist.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
+
+=cut
 
