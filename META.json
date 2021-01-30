@@ -70,7 +70,6 @@
    "version" : "0.09",
    "x_authority" : "cpan:BLUEFEET",
    "x_contributors" : [
-      "Aran Deltac <aran@ziprecruiter.com>",
       "Mohammad S Anwar <mohammad.anwar@yahoo.com>"
    ],
    "x_serialization_backend" : "JSON::PP version 4.02",
