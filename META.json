@@ -67,7 +67,7 @@
          "web" : "https://github.com/bluefeet/Data-Xslate"
       }
    },
-   "version" : "0.08",
+   "version" : "0.09",
    "x_authority" : "cpan:BLUEFEET",
    "x_contributors" : [
       "Aran Deltac <aran@ziprecruiter.com>",
